@@ -1,100 +1,301 @@
 {
-  "league": "My Basketball League · 2026-27",
+  "league": "BBBL · 2026-27",
   "teams": [
     {
-      "id": "hawks",
-      "name": "Hawks",
+      "id": "t1",
+      "name": "Team 1",
       "color": "#e8590c"
     },
     {
-      "id": "wolves",
-      "name": "Wolves",
+      "id": "t2",
+      "name": "Team 2",
       "color": "#1c7ed6"
     },
     {
-      "id": "titans",
-      "name": "Titans",
+      "id": "t3",
+      "name": "Team 3",
       "color": "#2f9e44"
-    },
-    {
-      "id": "rockets",
-      "name": "Rockets",
-      "color": "#ae3ec9"
     }
   ],
   "players": [
     {
-      "id": "p1",
-      "teamId": "hawks",
-      "name": "Sample Player",
+      "id": "t1p1",
+      "teamId": "t1",
+      "name": "Griffin",
       "number": ""
     },
     {
-      "id": "p2",
-      "teamId": "rockets",
-      "name": "Another Player",
+      "id": "t1p2",
+      "teamId": "t1",
+      "name": "Tommy",
+      "number": ""
+    },
+    {
+      "id": "t1p3",
+      "teamId": "t1",
+      "name": "TY",
+      "number": ""
+    },
+    {
+      "id": "t1p4",
+      "teamId": "t1",
+      "name": "Steve",
+      "number": ""
+    },
+    {
+      "id": "t1p5",
+      "teamId": "t1",
+      "name": "Deni",
+      "number": ""
+    },
+    {
+      "id": "t2p1",
+      "teamId": "t2",
+      "name": "Logan",
+      "number": ""
+    },
+    {
+      "id": "t2p2",
+      "teamId": "t2",
+      "name": "Evan",
+      "number": ""
+    },
+    {
+      "id": "t2p3",
+      "teamId": "t2",
+      "name": "Jared",
+      "number": ""
+    },
+    {
+      "id": "t2p4",
+      "teamId": "t2",
+      "name": "Griffin M",
+      "number": ""
+    },
+    {
+      "id": "t2p5",
+      "teamId": "t2",
+      "name": "Zec",
+      "number": ""
+    },
+    {
+      "id": "t2p6",
+      "teamId": "t2",
+      "name": "EMan",
+      "number": ""
+    },
+    {
+      "id": "t3p1",
+      "teamId": "t3",
+      "name": "Samuel",
+      "number": ""
+    },
+    {
+      "id": "t3p2",
+      "teamId": "t3",
+      "name": "Anthony",
+      "number": ""
+    },
+    {
+      "id": "t3p3",
+      "teamId": "t3",
+      "name": "Liam",
+      "number": ""
+    },
+    {
+      "id": "t3p4",
+      "teamId": "t3",
+      "name": "Cullen",
+      "number": ""
+    },
+    {
+      "id": "t3p5",
+      "teamId": "t3",
+      "name": "Seb",
+      "number": ""
+    },
+    {
+      "id": "t3p6",
+      "teamId": "t3",
+      "name": "Destin",
       "number": ""
     }
   ],
   "games": [
     {
       "id": "g1",
-      "date": "2026-11-01",
-      "time": "18:00",
-      "homeId": "hawks",
-      "awayId": "wolves",
+      "date": "2026-10-26",
+      "time": "",
+      "homeId": "t2",
+      "awayId": "t1",
       "location": "",
       "played": true,
-      "homeScore": 54,
-      "awayScore": 49,
+      "homeScore": 73,
+      "awayScore": 59,
       "stats": {
-        "p1": {
-          "pts": 18,
-          "reb": 7,
-          "ast": 4,
+        "t1p1": {
+          "pts": 26,
+          "reb": 4,
+          "ast": 1,
           "stl": 2,
+          "blk": 0
+        },
+        "t1p2": {
+          "pts": 2,
+          "reb": 10,
+          "ast": 1,
+          "stl": 1,
+          "blk": 0
+        },
+        "t1p3": {
+          "pts": 13,
+          "reb": 11,
+          "ast": 4,
+          "stl": 1,
+          "blk": 0
+        },
+        "t1p4": {
+          "pts": 16,
+          "reb": 23,
+          "ast": 4,
+          "stl": 0,
+          "blk": 0
+        },
+        "t1p5": {
+          "pts": 2,
+          "reb": 6,
+          "ast": 0,
+          "stl": 1,
+          "blk": 0
+        },
+        "t2p1": {
+          "pts": 28,
+          "reb": 10,
+          "ast": 4,
+          "stl": 1,
+          "blk": 0
+        },
+        "t2p3": {
+          "pts": 14,
+          "reb": 9,
+          "ast": 0,
+          "stl": 4,
+          "blk": 0
+        },
+        "t2p4": {
+          "pts": 9,
+          "reb": 11,
+          "ast": 4,
+          "stl": 3,
+          "blk": 2
+        },
+        "t2p5": {
+          "pts": 16,
+          "reb": 12,
+          "ast": 10,
+          "stl": 2,
+          "blk": 0
+        },
+        "t2p6": {
+          "pts": 6,
+          "reb": 6,
+          "ast": 1,
+          "stl": 0,
           "blk": 1
         }
       }
     },
     {
       "id": "g2",
-      "date": "2026-11-01",
-      "time": "19:15",
-      "homeId": "titans",
-      "awayId": "rockets",
+      "date": "2026-10-26",
+      "time": "",
+      "homeId": "t3",
+      "awayId": "t1",
       "location": "",
       "played": true,
-      "homeScore": 61,
-      "awayScore": 66,
+      "homeScore": 57,
+      "awayScore": 68,
       "stats": {
-        "p2": {
-          "pts": 22,
-          "reb": 5,
-          "ast": 6,
-          "stl": 1,
-          "blk": 0
+        "t1p1": {
+          "pts": 16,
+          "reb": 10,
+          "ast": 12,
+          "stl": 0
+        },
+        "t1p2": {
+          "pts": 9,
+          "reb": 7,
+          "ast": 0,
+          "stl": 1
+        },
+        "t1p3": {
+          "pts": 11,
+          "reb": 8,
+          "ast": 2,
+          "stl": 0
+        },
+        "t1p4": {
+          "pts": 30,
+          "reb": 10,
+          "ast": 1,
+          "stl": 3
+        },
+        "t1p5": {
+          "pts": 2,
+          "reb": 4,
+          "ast": 0,
+          "stl": 1
+        },
+        "t3p1": {
+          "pts": 21,
+          "reb": 10,
+          "ast": 0,
+          "stl": 3
+        },
+        "t3p3": {
+          "pts": 4,
+          "reb": 6,
+          "ast": 0,
+          "stl": 0
+        },
+        "t3p4": {
+          "pts": 15,
+          "reb": 12,
+          "ast": 2,
+          "stl": 0
+        },
+        "t3p5": {
+          "pts": 0,
+          "reb": 4,
+          "ast": 0,
+          "stl": 1
+        },
+        "t3p6": {
+          "pts": 17,
+          "reb": 13,
+          "ast": 5,
+          "stl": 3
         }
       }
     },
     {
       "id": "g3",
-      "date": "2026-11-08",
-      "time": "18:00",
-      "homeId": "wolves",
-      "awayId": "titans",
+      "date": "2026-11-09",
+      "time": "",
+      "homeId": "t3",
+      "awayId": "t2",
       "location": "",
-      "played": true,
-      "homeScore": 58,
-      "awayScore": 52,
+      "played": false,
+      "homeScore": 0,
+      "awayScore": 0,
       "stats": {}
     },
     {
       "id": "g4",
-      "date": "2026-11-15",
-      "time": "18:00",
-      "homeId": "rockets",
-      "awayId": "hawks",
+      "date": "2026-11-16",
+      "time": "",
+      "homeId": "t3",
+      "awayId": "t1",
       "location": "",
       "played": false,
       "homeScore": 0,
@@ -103,10 +304,94 @@
     },
     {
       "id": "g5",
-      "date": "2026-11-15",
-      "time": "19:15",
-      "homeId": "wolves",
-      "awayId": "rockets",
+      "date": "2026-11-23",
+      "time": "",
+      "homeId": "t2",
+      "awayId": "t1",
+      "location": "",
+      "played": false,
+      "homeScore": 0,
+      "awayScore": 0,
+      "stats": {}
+    },
+    {
+      "id": "g6",
+      "date": "2026-11-30",
+      "time": "",
+      "homeId": "t2",
+      "awayId": "t3",
+      "location": "",
+      "played": false,
+      "homeScore": 0,
+      "awayScore": 0,
+      "stats": {}
+    },
+    {
+      "id": "g7",
+      "date": "2026-11-30",
+      "time": "",
+      "homeId": "t1",
+      "awayId": "t3",
+      "location": "",
+      "played": false,
+      "homeScore": 0,
+      "awayScore": 0,
+      "stats": {}
+    },
+    {
+      "id": "g8",
+      "date": "2026-12-07",
+      "time": "",
+      "homeId": "t1",
+      "awayId": "t2",
+      "location": "",
+      "played": false,
+      "homeScore": 0,
+      "awayScore": 0,
+      "stats": {}
+    },
+    {
+      "id": "g9",
+      "date": "2026-12-14",
+      "time": "",
+      "homeId": "t3",
+      "awayId": "t2",
+      "location": "",
+      "played": false,
+      "homeScore": 0,
+      "awayScore": 0,
+      "stats": {}
+    },
+    {
+      "id": "g10",
+      "date": "2026-12-28",
+      "time": "",
+      "homeId": "t1",
+      "awayId": "t2",
+      "location": "",
+      "played": false,
+      "homeScore": 0,
+      "awayScore": 0,
+      "stats": {}
+    },
+    {
+      "id": "g11",
+      "date": "2026-12-28",
+      "time": "",
+      "homeId": "t3",
+      "awayId": "t2",
+      "location": "",
+      "played": false,
+      "homeScore": 0,
+      "awayScore": 0,
+      "stats": {}
+    },
+    {
+      "id": "g12",
+      "date": "2027-01-04",
+      "time": "",
+      "homeId": "t3",
+      "awayId": "t1",
       "location": "",
       "played": false,
       "homeScore": 0,
