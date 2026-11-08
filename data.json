@@ -285,83 +285,10 @@
       "homeId": "t3",
       "awayId": "t2",
       "location": "",
-      "played": true,
+      "played": false,
       "homeScore": 0,
-      "awayScore": 3,
-      "stats": {
-        "t2p1": {
-          "pts": 3,
-          "reb": 0,
-          "ast": 0,
-          "stl": 0,
-          "blk": 0,
-          "tpm": 1
-        },
-        "t2p2": {
-          "pts": 0,
-          "reb": 0,
-          "ast": 0,
-          "stl": 0,
-          "blk": 0,
-          "tpm": 0
-        },
-        "t2p3": {
-          "pts": 0,
-          "reb": 0,
-          "ast": 0,
-          "stl": 0,
-          "blk": 0,
-          "tpm": 0
-        },
-        "t2p4": {
-          "pts": 0,
-          "reb": 0,
-          "ast": 1,
-          "stl": 0,
-          "blk": 0,
-          "tpm": 0
-        },
-        "t3p1": {
-          "pts": 0,
-          "reb": 0,
-          "ast": 0,
-          "stl": 0,
-          "blk": 0,
-          "tpm": 0
-        },
-        "t3p3": {
-          "pts": 0,
-          "reb": 0,
-          "ast": 0,
-          "stl": 0,
-          "blk": 0,
-          "tpm": 0
-        },
-        "t3p2": {
-          "pts": 0,
-          "reb": 0,
-          "ast": 0,
-          "stl": 0,
-          "blk": 0,
-          "tpm": 0
-        },
-        "t3p4": {
-          "pts": 0,
-          "reb": 0,
-          "ast": 0,
-          "stl": 0,
-          "blk": 0,
-          "tpm": 0
-        },
-        "t3p5": {
-          "pts": 0,
-          "reb": 0,
-          "ast": 0,
-          "stl": 0,
-          "blk": 0,
-          "tpm": 0
-        }
-      }
+      "awayScore": 0,
+      "stats": {}
     },
     {
       "id": "g4",
