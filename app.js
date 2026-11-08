@@ -8,6 +8,7 @@ const $ = s => document.querySelector(s);
 let state = blank();
 let tab = 'standings';
 let sort = { key: 'pts', dir: -1 };
+let published = "";   // JSON string of what is live, to detect unpublished changes
 let creds = null;      // {salt, iter, hash} from admin.json
 let admin = false;
 try { admin = sessionStorage.getItem('hoops-admin') === '1'; } catch {}
@@ -79,7 +80,7 @@ function render() {
     b.classList.toggle('active', b.dataset.tab === tab);
     if (b.dataset.tab === 'data') b.hidden = !admin;
   });
-  $('#view').innerHTML = ({ standings: vStandings, schedule: vSchedule, teams: vTeams, stats: vStats, data: vData })[tab]();
+  $('#view').innerHTML = draftBanner() + ({ standings: vStandings, schedule: vSchedule, teams: vTeams, stats: vStats, data: vData })[tab]();
 }
 
 function vStandings() {
@@ -158,9 +159,10 @@ function vStats() {
 function vData() {
   if (!admin) return empty('Admin only.');
   return `<div class="card"><h2>League</h2><label>League name</label><input value="${esc(state.league)}" onchange="state.league=this.value;save()">
-    <p class="muted">Your edits are a draft in this browser only. Visitors see what is in <code>data.json</code> on GitHub: export, then upload the file to the repo to publish.</p>
-    <div class="actions" style="justify-content:flex-start"><button class="b" onclick="exportData()">Export JSON</button>
+    <p class="muted">Edits are a draft in this browser until you press <b>Publish to site</b>, which saves them to GitHub so everyone sees them (the live site updates about a minute later).</p>
+    <div class="actions" style="justify-content:flex-start"><button class="b" onclick="publish()">Publish to site</button> <button class="g" onclick="exportData()">Export JSON</button>
     <button class="g" onclick="$('#imp').click()">Import JSON</button><input id="imp" type="file" accept=".json" hidden onchange="importData(this.files[0])">
+    <button class="g" onclick="forgetToken()">Remove saved token</button>
     <button class="g d" onclick="if(confirm('Discard your draft and reload the published data?')){localStorage.removeItem(KEY);location.reload()}">Discard draft</button></div></div>`;
 }
 const empty = msg => `<div class="card muted">${msg}</div>`;
@@ -243,10 +245,65 @@ function importData(file) {
 }
 document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => { tab = b.dataset.tab; render(); });
 
+
+/* ---------- publishing (saves data.json to the GitHub repo) ---------- */
+const GH = { repo: "griffin121/basketball-league", path: "data.json", branch: "main" };
+const TOKEN_KEY = "hoops-gh-token";
+const getToken = () => { try { return localStorage.getItem(TOKEN_KEY) || ""; } catch { return ""; } };
+function forgetToken() { try { localStorage.removeItem(TOKEN_KEY); } catch {} toast("Token removed from this browser."); }
+const isDirty = () => admin && published && JSON.stringify(state) !== published;
+function draftBanner() {
+  return isDirty() ? `<div class="card" style="border-color:var(--accent)"><div class="row" style="margin:0"><span><b>Unpublished changes.</b> Visitors can\u2019t see them yet.</span>
+    <span><button class="b" onclick="publish()">Publish to site</button> <button class="g" onclick="discardDraft()">Discard</button></span></div></div>` : "";
+}
+function discardDraft() { if (confirm("Discard your unpublished changes?")) { try { localStorage.removeItem(KEY); } catch {} location.reload(); } }
+function toast(msg) {
+  let t = $("#toast"); if (!t) { t = document.createElement("div"); t.id = "toast"; document.body.appendChild(t); }
+  t.textContent = msg; t.className = "show"; clearTimeout(t._h); t._h = setTimeout(() => t.className = "", 6000);
+}
+function askToken() {
+  return new Promise(resolve => {
+    dialog(`<h2>One-time setup: GitHub token</h2>
+      <p class="muted">Publishing saves <code>data.json</code> to your repo, which needs a GitHub token. It is stored only in this browser.</p>
+      <ol class="muted" style="padding-left:18px"><li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → new fine-grained token</a>.</li>
+      <li>Repository access: <b>Only select repositories</b> → basketball-league.</li>
+      <li>Permissions → Repository → <b>Contents: Read and write</b>.</li><li>Generate, copy, and paste it below.</li></ol>
+      <label>Token</label><input type="password" name="tok" autocomplete="off" required>
+      <div class="actions"><button type="button" class="g" data-cancel>Cancel</button><button class="b">Save token</button></div>`, fd => {
+      const v = String(fd.get("tok") || "").trim();
+      if (v) { try { localStorage.setItem(TOKEN_KEY, v); } catch { return alert("Could not store the token in this browser."); } }
+      resolve(v);
+    });
+    $("#dlg").addEventListener("close", () => resolve(""), { once: true });
+  });
+}
+async function publish() {
+  if (!admin) return;
+  let token = getToken() || await askToken();
+  if (!token) return;
+  const api = `https://api.github.com/repos/${GH.repo}/contents/${GH.path}`;
+  const headers = { Authorization: "Bearer " + token, Accept: "application/vnd.github+json" };
+  try {
+    toast("Publishing\u2026");
+    const cur = await fetch(api + "?ref=" + GH.branch, { headers, cache: "no-store" });
+    if (cur.status === 401 || cur.status === 403) { forgetToken(); return toast("GitHub rejected the token. Try Publish again to enter a new one."); }
+    const sha = cur.ok ? (await cur.json()).sha : undefined;
+    const body = JSON.stringify(state, null, 2);
+    const res = await fetch(api, { method: "PUT", headers, body: JSON.stringify({
+      message: "Update league data", branch: GH.branch, sha,
+      content: btoa(unescape(encodeURIComponent(body))) }) });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || res.status);
+    published = JSON.stringify(state);
+    try { localStorage.removeItem(KEY); } catch {}
+    render(); toast("Published! The live site updates in about a minute.");
+  } catch (e) { toast("Publish failed: " + e.message); }
+}
+
 $('#adminBtn').onclick = adminClick;
 (async () => {
   try { const r = await fetch('admin.json', { cache: 'no-cache' }); if (r.ok) creds = await r.json(); } catch {}
   try { const r = await fetch('data.json', { cache: 'no-cache' }); if (r.ok) state = Object.assign(blank(), await r.json()); } catch {}
+  published = JSON.stringify(state);
   if (admin) loadDraft();
   render();
 })();

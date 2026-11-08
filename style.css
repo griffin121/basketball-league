@@ -49,3 +49,5 @@ input,select,textarea{width:100%;padding:8px;border:1px solid var(--line);border
 .matchup{display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:1.02rem}
 .matchup .vs{color:var(--muted);margin:0 8px;font-size:.8rem;text-transform:uppercase}
 .ball{vertical-align:-3px}
+#toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:.2s;max-width:90%;z-index:20}
+#toast.show{opacity:1;transform:translate(-50%,0)}
