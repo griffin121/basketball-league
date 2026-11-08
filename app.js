@@ -5,15 +5,40 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const $ = s => document.querySelector(s);
 
-let state = load();
+let state = blank();
 let tab = 'standings';
 let sort = { key: 'pts', dir: -1 };
+let creds = null;      // {salt, iter, hash} from admin.json
+let admin = false;
+try { admin = sessionStorage.getItem('hoops-admin') === '1'; } catch {}
+// Everyone sees the published data.json. Only a logged-in admin can edit; edits are kept as a
+// local draft in the admin's browser until they export it and upload data.json to the repo.
+const A = html => admin ? html : '';
 
 function blank() { return { league: 'My Basketball League', teams: [], players: [], games: [] }; }
-function load() {
-  try { return Object.assign(blank(), JSON.parse(localStorage.getItem(KEY))); } catch { return blank(); }
+function save() { if (!admin) return; try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} render(); }
+
+const hex2buf = h => new Uint8Array(h.match(/../g).map(x => parseInt(x, 16)));
+const buf2hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+async function pwHash(pw, c) {
+  const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
+  return buf2hex(await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: hex2buf(c.salt), iterations: c.iter, hash: 'SHA-256' }, k, 256));
 }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} render(); }
+function adminClick() {
+  if (admin) { admin = false; try { sessionStorage.removeItem('hoops-admin'); } catch {} location.reload(); return; }
+  if (!creds) return alert('Admin password has not been set up yet.');
+  dialog(`<h2>Admin login</h2><label>Password</label><input type="password" name="pw" autocomplete="current-password" required autofocus>
+    <div class="actions"><button type="button" class="g" data-cancel>Cancel</button><button class="b">Log in</button></div>`, async fd => {
+    let ok = false;
+    try { ok = (await pwHash(fd.get('pw'), creds)) === creds.hash; } catch {}
+    if (!ok) return alert('Wrong password.');
+    admin = true; try { sessionStorage.setItem('hoops-admin', '1'); } catch {}
+    loadDraft(); render();
+  });
+}
+function loadDraft() {
+  try { const d = localStorage.getItem(KEY); if (d) state = Object.assign(blank(), JSON.parse(d)); } catch {}
+}
 
 const team = id => state.teams.find(t => t.id === id);
 const player = id => state.players.find(p => p.id === id);
@@ -47,8 +72,13 @@ function playerTotals() {
 
 /* ---------- views ---------- */
 function render() {
+  if (!admin && tab === 'data') tab = 'standings';
   $('#leagueName').textContent = state.league;
-  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  $('#adminBtn').textContent = admin ? 'Admin ✓ Log out' : 'Admin login';
+  document.querySelectorAll('#tabs button').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+    if (b.dataset.tab === 'data') b.hidden = !admin;
+  });
   $('#view').innerHTML = ({ standings: vStandings, schedule: vSchedule, teams: vTeams, stats: vStats, data: vData })[tab]();
 }
 
@@ -66,21 +96,21 @@ function vSchedule() {
     return `<div class="game"><div class="when muted">${esc(g.date)} ${esc(g.time || '')}</div>
       <div>${tdot(g.awayId)}<span class="${aw ? 'win' : ''}">${esc(tname(g.awayId))}</span> <span class="muted">@</span> ${tdot(g.homeId)}<span class="${hw ? 'win' : ''}">${esc(tname(g.homeId))}</span>
       ${g.location ? `<div class="muted" style="font-size:.8rem">${esc(g.location)}</div>` : ''}</div>
-      <div><span class="score">${g.played ? `${g.awayScore} – ${g.homeScore}` : ''}</span> <button class="g" onclick="editGame('${g.id}')">${g.played ? 'Edit' : 'Score'}</button></div></div>`;
+      <div><span class="score">${g.played ? `${g.awayScore} – ${g.homeScore}` : ''}</span> ${A(`<button class="g" onclick="editGame('${g.id}')">${g.played ? 'Edit' : 'Score'}</button>`)}</div></div>`;
   };
   const up = games.filter(g => !g.played), done = games.filter(g => g.played).reverse();
-  return `<div class="card"><div class="row"><h2>Upcoming</h2><button class="b" onclick="editGame()">+ Game</button></div>${up.map(item).join('') || '<p class="muted">No upcoming games.</p>'}</div>
+  return `<div class="card"><div class="row"><h2>Upcoming</h2>${A('<button class="b" onclick="editGame()">+ Game</button>')}</div>${up.map(item).join('') || '<p class="muted">No upcoming games.</p>'}</div>
     <div class="card"><div class="row"><h2>Results</h2></div>${done.map(item).join('') || '<p class="muted">No results yet.</p>'}</div>`;
 }
 
 function vTeams() {
   const cards = state.teams.map(t => {
     const ps = state.players.filter(p => p.teamId === t.id);
-    return `<div class="card"><div class="row"><h2>${tdot(t.id)}${esc(t.name)}</h2><span>
-      <button class="g" onclick="editPlayer(null,'${t.id}')">+ Player</button> <button class="g" onclick="editTeam('${t.id}')">Edit</button></span></div>
-      <table><tr><th>#</th><th class="l">Player</th><th></th></tr>${ps.map(p => `<tr><td>${esc(p.number)}</td><td class="l">${esc(p.name)}</td><td><button class="g" onclick="editPlayer('${p.id}')">Edit</button></td></tr>`).join('') || '<tr><td colspan="3" class="muted">No players</td></tr>'}</table></div>`;
+    return `<div class="card"><div class="row"><h2>${tdot(t.id)}${esc(t.name)}</h2>${A(`<span>
+      <button class="g" onclick="editPlayer(null,'${t.id}')">+ Player</button> <button class="g" onclick="editTeam('${t.id}')">Edit</button></span>`)}</div>
+      <table><tr><th>#</th><th class="l">Player</th><th></th></tr>${ps.map(p => `<tr><td>${esc(p.number)}</td><td class="l">${esc(p.name)}</td><td>${A(`<button class="g" onclick="editPlayer('${p.id}')">Edit</button>`)}</td></tr>`).join('') || '<tr><td colspan="3" class="muted">No players</td></tr>'}</table></div>`;
   }).join('');
-  return `<div class="row"><h2>Teams</h2><button class="b" onclick="editTeam()">+ Team</button></div>${cards || empty('No teams yet.')}`;
+  return `<div class="row"><h2>Teams</h2>${A('<button class="b" onclick="editTeam()">+ Team</button>')}</div>${cards || empty('No teams yet.')}`;
 }
 
 function vStats() {
@@ -96,11 +126,12 @@ function vStats() {
 }
 
 function vData() {
+  if (!admin) return empty('Admin only.');
   return `<div class="card"><h2>League</h2><label>League name</label><input value="${esc(state.league)}" onchange="state.league=this.value;save()">
-    <p class="muted">Data is saved in this browser. Export a backup regularly, or commit the exported file as <code>data.json</code> to publish it for everyone.</p>
+    <p class="muted">Your edits are a draft in this browser only. Visitors see what is in <code>data.json</code> on GitHub: export, then upload the file to the repo to publish.</p>
     <div class="actions" style="justify-content:flex-start"><button class="b" onclick="exportData()">Export JSON</button>
     <button class="g" onclick="$('#imp').click()">Import JSON</button><input id="imp" type="file" accept=".json" hidden onchange="importData(this.files[0])">
-    <button class="g d" onclick="if(confirm('Erase everything?')){state=blank();save()}">Reset</button></div></div>`;
+    <button class="g d" onclick="if(confirm('Discard your draft and reload the published data?')){localStorage.removeItem(KEY);location.reload()}">Discard draft</button></div></div>`;
 }
 const empty = msg => `<div class="card muted">${msg}</div>`;
 
@@ -115,6 +146,7 @@ const btns = del => `<div class="actions">${del ? `<button type="button" class="
 function hookDelete(fn) { const d = $('#dlgForm [data-del]'); if (d) d.onclick = () => { if (confirm('Delete?')) { fn(); $('#dlg').close(); } }; }
 
 function editTeam(id) {
+  if (!admin) return;
   const t = team(id) || { name: '', color: '#e8590c' };
   dialog(`<h2>${id ? 'Edit' : 'New'} team</h2><label>Name</label><input name="name" required value="${esc(t.name)}"><label>Color</label><input name="color" type="color" value="${esc(t.color)}">${btns(id)}`, fd => {
     if (id) Object.assign(t, { name: fd.get('name'), color: fd.get('color') });
@@ -128,6 +160,7 @@ function editTeam(id) {
   });
 }
 function editPlayer(id, teamId) {
+  if (!admin) return;
   const p = player(id) || { name: '', number: '', teamId };
   dialog(`<h2>${id ? 'Edit' : 'New'} player</h2><div class="two"><div><label>Name</label><input name="name" required value="${esc(p.name)}"></div><div><label>Number</label><input name="number" value="${esc(p.number)}"></div></div>
     <label>Team</label><select name="team">${state.teams.map(t => `<option value="${t.id}" ${t.id === p.teamId ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select>${btns(id)}`, fd => {
@@ -138,6 +171,7 @@ function editPlayer(id, teamId) {
   hookDelete(() => { state.players = state.players.filter(x => x.id !== id); save(); });
 }
 function editGame(id) {
+  if (!admin) return;
   if (state.teams.length < 2) return alert('Add at least two teams first.');
   const g = state.games.find(x => x.id === id) || { date: new Date().toISOString().slice(0, 10), time: '', homeId: state.teams[0].id, awayId: state.teams[1].id, location: '', played: false, homeScore: 0, awayScore: 0, stats: {} };
   const opts = sel => state.teams.map(t => `<option value="${t.id}" ${t.id === sel ? 'selected' : ''}>${esc(t.name)}</option>`).join('');
@@ -174,15 +208,15 @@ function exportData() {
   a.download = 'data.json'; a.click();
 }
 function importData(file) {
-  if (!file) return;
+  if (!admin || !file) return;
   file.text().then(t => { state = Object.assign(blank(), JSON.parse(t)); save(); }).catch(() => alert('Invalid file.'));
 }
 document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => { tab = b.dataset.tab; render(); });
 
-// First visit with no local data: try a published data.json (so visitors see the shared league)
+$('#adminBtn').onclick = adminClick;
 (async () => {
-  if (!localStorage.getItem(KEY)) {
-    try { const r = await fetch('data.json'); if (r.ok) state = Object.assign(blank(), await r.json()); } catch {}
-  }
+  try { const r = await fetch('admin.json', { cache: 'no-cache' }); if (r.ok) creds = await r.json(); } catch {}
+  try { const r = await fetch('data.json', { cache: 'no-cache' }); if (r.ok) state = Object.assign(blank(), await r.json()); } catch {}
+  if (admin) loadDraft();
   render();
 })();
