@@ -34,7 +34,7 @@ function adminClick() {
     try { ok = (await pwHash(fd.get('pw'), creds)) === creds.hash; } catch {}
     if (!ok) return alert('Wrong password.');
     admin = true; try { sessionStorage.setItem('hoops-admin', '1'); } catch {}
-    loadDraft(); render();
+    loadDraft(); loadKeeper(); render();
   });
 }
 function loadDraft() {
@@ -73,16 +73,16 @@ function playerTotals() {
 
 /* ---------- views ---------- */
 function render() {
-  if (!admin && tab === 'data') tab = 'standings';
+  if (!admin && (tab === 'data' || tab === 'keeper')) tab = 'standings';
   $('#draftbar').innerHTML = draftBanner();
   document.body.classList.toggle('has-bar', isDirty());
   $('#leagueName').textContent = state.league;
   $('#adminBtn').textContent = admin ? 'Admin ✓ Log out' : 'Admin login';
   document.querySelectorAll('#tabs button').forEach(b => {
     b.classList.toggle('active', b.dataset.tab === tab);
-    if (b.dataset.tab === 'data') b.hidden = !admin;
+    if (b.dataset.tab === 'data' || b.dataset.tab === 'keeper') b.hidden = !admin;
   });
-  $('#view').innerHTML = ({ standings: vStandings, schedule: vSchedule, teams: vTeams, stats: vStats, data: vData })[tab]();
+  $('#view').innerHTML = ({ standings: vStandings, schedule: vSchedule, teams: vTeams, stats: vStats, keeper: vKeeper, data: vData })[tab]();
 }
 
 function vStandings() {
@@ -301,11 +301,131 @@ async function publish() {
   } catch (e) { toast("Publish failed: " + e.message); }
 }
 
+/* ---------- live score keeper (admin) ---------- */
+const KK = 'hoops-keeper-v1';
+const freshK = () => ({ gameId: '', on: {}, seen: [], events: [], sel: null });
+let K = freshK();
+function loadKeeper() {
+  try { const d = JSON.parse(localStorage.getItem(KK)); if (d) K = Object.assign(freshK(), d); } catch {}
+  if (K.gameId && !state.games.some(g => g.id === K.gameId)) K = freshK();
+}
+function saveKeeper() { try { localStorage.setItem(KK, JSON.stringify(K)); } catch {} }
+const kGame = () => state.games.find(g => g.id === K.gameId);
+const kRoster = tid => state.players.filter(p => p.teamId === tid);
+const kOn = tid => (K.on[tid] ??= []);
+const zero = () => ({ pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, tpm: 0 });
+const EV = { '2': '2-pointer', '3': '3-pointer', reb: 'Rebound', blk: 'Block', stl: 'Steal' };
+
+function kTotals() {
+  const st = {}, team = {};
+  for (const e of K.events) {
+    const s = (st[e.p] ??= zero());
+    if (e.t === '2' || e.t === '3') {
+      s.pts += +e.t; if (e.t === '3') s.tpm++;
+      team[e.team] = (team[e.team] || 0) + +e.t;
+      if (e.a) (st[e.a] ??= zero()).ast++;
+    } else s[e.t]++;
+  }
+  return { st, team };
+}
+
+function vKeeper() {
+  if (!admin) return empty('Admin only.');
+  const g = kGame();
+  const label = x => `${fmtDate(x.date).replace(/^\w+ /, '')} — ${tname(x.awayId)} vs ${tname(x.homeId)}${x.played ? ' (final)' : ''}`;
+  const games = [...state.games].sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+  let html = `<div class="card"><div class="row"><h2>Score Keeper</h2></div><label>Game</label>
+    <select onchange="kPick(this.value)"><option value="">Select a game…</option>${games.map(x => `<option value="${x.id}" ${x.id === K.gameId ? 'selected' : ''}>${esc(label(x))}</option>`).join('')}</select></div>`;
+  if (!g) return html;
+  const { st, team } = kTotals();
+  const col = tid => {
+    const on = kOn(tid), bench = kRoster(tid).filter(p => !on.includes(p.id));
+    const tile = pid => {
+      const p = player(pid), s = st[pid] || zero();
+      return `<div class="tile ${K.sel === pid ? 'sel' : ''}" onclick="kSelect('${pid}')"><button class="x" title="Take out" onclick="event.stopPropagation();kOut('${tid}','${pid}')">×</button>
+        <b>${esc(p?.name)}</b><span class="muted">${s.pts} pts · ${s.reb} reb · ${s.ast} ast</span><span class="muted">${s.stl} stl · ${s.blk} blk</span></div>`;
+    };
+    return `<div class="card kcol"><div class="kscore">${tdot(tid)}<span>${esc(tname(tid))}</span><b>${team[tid] || 0}</b></div>
+      <div class="muted" style="margin:6px 0">On court ${on.length}/4 — tap a player to select</div>
+      <div class="tiles">${on.map(tile).join('') || '<span class="muted">Nobody on court yet. Add players below.</span>'}</div>
+      <div class="muted" style="margin:10px 0 4px">Bench — tap to sub in</div>
+      <div class="chips">${bench.map(p => `<button class="g chip" onclick="kIn('${tid}','${p.id}')">${esc(p.name)}</button>`).join('') || '<span class="muted">Everyone is on court.</span>'}</div></div>`;
+  };
+  const sel = K.sel && player(K.sel);
+  const dis = sel ? '' : 'disabled';
+  const recent = [...K.events].reverse().slice(0, 8).map(e => {
+    const a = e.a ? ` (assist: ${esc(player(e.a)?.name)})` : '';
+    return `<div>${tdot(e.team)}<b>${esc(player(e.p)?.name)}</b> – ${EV[e.t]}${a}</div>`;
+  }).join('') || '<span class="muted">No plays yet.</span>';
+  html += `<div class="kgrid">${col(g.awayId)}${col(g.homeId)}</div>
+    <div class="card kactions"><div class="muted" style="margin-bottom:8px">${sel ? `Selected: <b>${esc(sel.name)}</b>` : 'Select a player on court, then tap an action.'}</div>
+      <div class="abtns"><button class="b" ${dis} onclick="kAct('2')">2 Pointer</button><button class="b" ${dis} onclick="kAct('3')">3 Pointer</button>
+      <button class="b" ${dis} onclick="kAct('reb')">Rebound</button><button class="b" ${dis} onclick="kAct('blk')">Block</button><button class="b" ${dis} onclick="kAct('stl')">Steal</button>
+      <button class="g" ${K.events.length ? '' : 'disabled'} onclick="kUndo()">↶ Undo</button></div></div>
+    <div class="card"><div class="row"><h2>Recent plays</h2><span><button class="b" onclick="kFinish()" ${K.events.length ? '' : 'disabled'}>Save to game</button>
+      <button class="g d" onclick="kReset()">Clear</button></span></div>${recent}</div>`;
+  return html;
+}
+
+function kPick(id) {
+  if (!admin) return;
+  if (id === K.gameId) return;
+  if (K.events.length && !confirm('Switch games? Unsaved plays for the current game will be lost.')) return render();
+  K = freshK(); K.gameId = id; saveKeeper(); render();
+  const g = kGame(); if (g?.played && Object.keys(g.stats || {}).length) toast('This game already has stats. Saving will replace them.');
+}
+function kSelect(pid) { K.sel = K.sel === pid ? null : pid; saveKeeper(); render(); }
+function kMarkSeen(pid) { if (!K.seen.includes(pid)) K.seen.push(pid); }
+function kIn(tid, pid) {
+  const on = kOn(tid);
+  if (on.length < 4) { on.push(pid); kMarkSeen(pid); saveKeeper(); return render(); }
+  // full: ask who to replace
+  const f = $('#dlgForm');
+  f.innerHTML = `<h2>Sub in ${esc(player(pid)?.name)} for…</h2><div class="tiles">${on.map(o => `<button type="button" class="g chip" onclick="kSwap('${tid}','${o}','${pid}')">${esc(player(o)?.name)}</button>`).join('')}</div>
+    <div class="actions"><button type="button" class="g" onclick="$('#dlg').close()">Cancel</button></div>`;
+  f.onsubmit = e => e.preventDefault(); $('#dlg').showModal();
+}
+function kSwap(tid, out, inn) {
+  K.on[tid] = kOn(tid).map(x => x === out ? inn : x); kMarkSeen(inn);
+  if (K.sel === out) K.sel = null;
+  $('#dlg').close(); saveKeeper(); render();
+}
+function kOut(tid, pid) { K.on[tid] = kOn(tid).filter(x => x !== pid); if (K.sel === pid) K.sel = null; saveKeeper(); render(); }
+function kAct(t) {
+  if (!admin) return;
+  const p = player(K.sel); if (!p) return;
+  const ev = { t, p: p.id, team: p.teamId };
+  if (t !== '2' && t !== '3') { K.events.push(ev); K.sel = null; saveKeeper(); return render(); }
+  const mates = kOn(p.teamId).filter(x => x !== p.id);
+  const f = $('#dlgForm');
+  f.innerHTML = `<h2>${esc(p.name)} – ${EV[t]}. Assist?</h2><div class="tiles">${mates.map(m => `<button type="button" class="b chip" onclick="kShot('${t}','${p.id}','${m}')">${esc(player(m)?.name)}</button>`).join('')}
+    <button type="button" class="g chip" onclick="kShot('${t}','${p.id}','')">No assist</button></div>
+    <div class="actions"><button type="button" class="g" onclick="$('#dlg').close()">Cancel</button></div>`;
+  f.onsubmit = e => e.preventDefault(); $('#dlg').showModal();
+}
+function kShot(t, pid, aid) {
+  const p = player(pid); K.events.push({ t, p: pid, team: p.teamId, ...(aid ? { a: aid } : {}) });
+  K.sel = null; $('#dlg').close(); saveKeeper(); render();
+}
+function kUndo() { if (!K.events.length) return; const e = K.events.pop(); K.sel = null; saveKeeper(); render(); toast('Undid: ' + (player(e.p)?.name || '') + ' ' + EV[e.t]); }
+function kReset() { if (confirm('Clear all plays and start over for this game?')) { const id = K.gameId; K = freshK(); K.gameId = id; saveKeeper(); render(); } }
+function kFinish() {
+  if (!admin) return;
+  const g = kGame(); if (!g || !K.events.length) return;
+  const { st, team } = kTotals();
+  const msg = `Save ${tname(g.awayId)} ${team[g.awayId] || 0} – ${team[g.homeId] || 0} ${tname(g.homeId)} to this game?` + (Object.keys(g.stats || {}).length ? '\nThis replaces the stats already entered for it.' : '');
+  if (!confirm(msg)) return;
+  const stats = {};
+  for (const pid of new Set([...K.seen, ...Object.keys(st)])) stats[pid] = { ...zero(), ...(st[pid] || {}) };
+  Object.assign(g, { played: true, awayScore: team[g.awayId] || 0, homeScore: team[g.homeId] || 0, stats });
+  K = freshK(); saveKeeper(); save();
+}
+
 $('#adminBtn').onclick = adminClick;
 (async () => {
   try { const r = await fetch('admin.json', { cache: 'no-cache' }); if (r.ok) creds = await r.json(); } catch {}
   try { const r = await fetch('data.json', { cache: 'no-cache' }); if (r.ok) state = Object.assign(blank(), await r.json()); } catch {}
   published = JSON.stringify(state);
-  if (admin) loadDraft();
+  if (admin) { loadDraft(); loadKeeper(); }
   render();
 })();

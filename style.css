@@ -55,3 +55,18 @@ input,select,textarea{width:100%;padding:8px;border:1px solid var(--line);border
 #draftbar .bar-in{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;background:var(--card);border-top:3px solid var(--accent);box-shadow:0 -4px 16px #0003}
 body.has-bar{padding-bottom:84px}
 body.has-bar #toast{bottom:100px}
+/* score keeper */
+.kgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:700px){.kgrid{grid-template-columns:1fr}}
+.kscore{display:flex;align-items:center;gap:6px;font-size:1.1rem}
+.kscore span:not(.dot){flex:1;font-weight:600}.kscore b{font-size:2rem;font-variant-numeric:tabular-nums}
+.tiles{display:flex;flex-wrap:wrap;gap:8px}
+.tile{position:relative;flex:1 1 120px;min-width:120px;border:2px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:2px;cursor:pointer;background:var(--bg);font-size:.82rem}
+.tile b{font-size:1rem}
+.tile.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--card))}
+.tile .x{position:absolute;top:4px;right:4px;border:0;background:none;color:var(--muted);font-size:1.1rem;cursor:pointer;line-height:1}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{padding:10px 14px}
+.kactions{position:sticky;bottom:0;z-index:6}
+.abtns{display:flex;flex-wrap:wrap;gap:8px}.abtns button{flex:1 1 90px;padding:14px 10px;font-weight:600}
+button:disabled{opacity:.4;cursor:not-allowed}
+body.has-bar .kactions{bottom:70px}
