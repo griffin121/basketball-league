@@ -32,3 +32,20 @@ input,select,textarea{width:100%;padding:8px;border:1px solid var(--line);border
 .box input{width:58px;padding:4px;text-align:right}
 .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
 @media(max-width:560px){.game{grid-template-columns:1fr auto}.game .when{grid-column:1/-1}}
+/* schedule banners */
+.day{padding:0}
+.day-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:color-mix(in srgb,var(--accent) 12%,var(--card));border-bottom:1px solid var(--line);border-radius:12px 12px 0 0}
+.badge{background:var(--accent);color:#fff;font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:99px;text-transform:uppercase}
+.gm{padding:12px 14px;border-bottom:1px solid var(--line)}
+.gm:last-child{border-bottom:0}
+.gm-main{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.sides{flex:1;min-width:200px}
+.side{display:flex;align-items:center;gap:4px;padding:2px 0}
+.side .nm{flex:1}.side .pts{font-weight:700;font-variant-numeric:tabular-nums}
+.side.win .nm,.side.win .pts{font-weight:700;color:var(--ok)}
+.gm-side{display:flex;align-items:center;gap:10px;font-size:.85rem}
+.box-detail summary{cursor:pointer;color:var(--muted);font-size:.85rem;margin-top:8px}
+.box-detail table{margin-top:4px}
+.matchup{display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:1.02rem}
+.matchup .vs{color:var(--muted);margin:0 8px;font-size:.8rem;text-transform:uppercase}
+.ball{vertical-align:-3px}

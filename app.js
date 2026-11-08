@@ -89,18 +89,48 @@ function vStandings() {
   return `<div class="card"><div class="row"><h2>Standings</h2></div><table><tr><th>Team</th><th>GP</th><th>W</th><th>L</th><th>PCT</th><th>PF</th><th>PA</th><th>DIFF</th><th>Last 5</th></tr>${rows}</table></div>`;
 }
 
+const fmtDate = d => { try { return new Date(d + 'T00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }); } catch { return d; } };
+const fmtTime = t => { if (!t) return ''; const [h, m] = t.split(':'); const hr = +h % 12 || 12; return `${hr}:${m} ${+h < 12 ? 'AM' : 'PM'}`; };
+
+function boxHtml(g) {
+  const sides = [g.awayId, g.homeId].map(tid => {
+    const rows = state.players.filter(p => p.teamId === tid && g.stats?.[p.id]).map(p => {
+      const s = g.stats[p.id];
+      return `<tr><td class="l">${esc(p.name)}</td>${STATS.map(([k]) => `<td>${s[k] ?? '–'}</td>`).join('')}</tr>`;
+    }).join('');
+    return rows ? `<div style="margin-top:10px"><strong>${tdot(tid)}${esc(tname(tid))}</strong>
+      <table><tr><th class="l">Player</th>${STATS.map(([, l]) => `<th>${l}</th>`).join('')}</tr>${rows}</table></div>` : '';
+  }).join('');
+  return sides ? `<details class="box-detail"><summary>Box score</summary>${sides}</details>` : '';
+}
+
+function gameRow(g) {
+  const aw = g.played && g.awayScore > g.homeScore, hw = g.played && g.homeScore > g.awayScore;
+  const side = (id, score, win) => `<div class="side ${win ? 'win' : ''}">${tdot(id)}<span class="nm">${esc(tname(id))}</span>${g.played ? `<span class="pts">${score}</span>` : ''}</div>`;
+  const meta = [g.played ? 'Final' : fmtTime(g.time), g.location].filter(Boolean).map(esc).join(' · ');
+  return `<div class="gm">
+    <div class="gm-main">${g.played ? `<div class="sides">${side(g.awayId, g.awayScore, aw)}${side(g.homeId, g.homeScore, hw)}</div>`
+      : `<div class="sides matchup">${tdot(g.awayId)}<strong>${esc(tname(g.awayId))}</strong><span class="vs">vs</span>${tdot(g.homeId)}<strong>${esc(tname(g.homeId))}</strong></div>`}
+      <div class="gm-side">${meta ? `<span class="muted">${meta}</span>` : ''}${A(`<button class="g" onclick="editGame('${g.id}')">${g.played ? 'Edit' : 'Enter score'}</button>`)}</div></div>
+    ${g.played ? boxHtml(g) : ''}</div>`;
+}
+
 function vSchedule() {
-  const games = [...state.games].sort((a, b) => (a.date + (a.time||'')).localeCompare(b.date + (b.time||'')));
-  const item = g => {
-    const hw = g.played && g.homeScore > g.awayScore, aw = g.played && g.awayScore > g.homeScore;
-    return `<div class="game"><div class="when muted">${esc(g.date)} ${esc(g.time || '')}</div>
-      <div>${tdot(g.awayId)}<span class="${aw ? 'win' : ''}">${esc(tname(g.awayId))}</span> <span class="muted">@</span> ${tdot(g.homeId)}<span class="${hw ? 'win' : ''}">${esc(tname(g.homeId))}</span>
-      ${g.location ? `<div class="muted" style="font-size:.8rem">${esc(g.location)}</div>` : ''}</div>
-      <div><span class="score">${g.played ? `${g.awayScore} – ${g.homeScore}` : ''}</span> ${A(`<button class="g" onclick="editGame('${g.id}')">${g.played ? 'Edit' : 'Score'}</button>`)}</div></div>`;
+  const key = g => g.date + (g.time || '');
+  const all = [...state.games].sort((a, b) => key(a).localeCompare(key(b)));
+  const weekOf = Object.fromEntries([...new Set(all.map(g => g.date))].map((d, i) => [d, i + 1]));
+  const byDate = list => {
+    const m = new Map(); for (const g of list) { if (!m.has(g.date)) m.set(g.date, []); m.get(g.date).push(g); }
+    return [...m.entries()];
   };
-  const up = games.filter(g => !g.played), done = games.filter(g => g.played).reverse();
-  return `<div class="card"><div class="row"><h2>Upcoming</h2>${A('<button class="b" onclick="editGame()">+ Game</button>')}</div>${up.map(item).join('') || '<p class="muted">No upcoming games.</p>'}</div>
-    <div class="card"><div class="row"><h2>Results</h2></div>${done.map(item).join('') || '<p class="muted">No results yet.</p>'}</div>`;
+  const banner = ([date, games], badge) => `<div class="card day">
+    <div class="day-head"><div><strong>${esc(fmtDate(date))}</strong> <span class="muted">· Week ${weekOf[date]}</span></div>${badge ? `<span class="badge">${badge}</span>` : ''}</div>
+    ${games.map(gameRow).join('')}</div>`;
+  const up = byDate(all.filter(g => !g.played)), done = byDate(all.filter(g => g.played).reverse());
+  return `<div class="row"><h2>Upcoming</h2>${A('<button class="b" onclick="editGame()">+ Game</button>')}</div>
+    ${up.map((d, i) => banner(d, i === 0 ? 'Next up' : '')).join('') || '<div class="card muted">No upcoming games.</div>'}
+    <div class="row" style="margin-top:22px"><h2>Results</h2></div>
+    ${done.map(d => banner(d)).join('') || '<div class="card muted">No results yet.</div>'}`;
 }
 
 function vTeams() {
