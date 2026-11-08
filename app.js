@@ -17,7 +17,7 @@ try { admin = sessionStorage.getItem('hoops-admin') === '1'; } catch {}
 const A = html => admin ? html : '';
 
 function blank() { return { league: 'My Basketball League', teams: [], players: [], games: [] }; }
-function save() { if (!admin) return; try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} render(); }
+function save() { if (!admin) return; try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} render(); if (isDirty()) toast('Saved as a draft. Press Publish to make it live.'); }
 
 const hex2buf = h => new Uint8Array(h.match(/../g).map(x => parseInt(x, 16)));
 const buf2hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
@@ -74,13 +74,15 @@ function playerTotals() {
 /* ---------- views ---------- */
 function render() {
   if (!admin && tab === 'data') tab = 'standings';
+  $('#draftbar').innerHTML = draftBanner();
+  document.body.classList.toggle('has-bar', isDirty());
   $('#leagueName').textContent = state.league;
   $('#adminBtn').textContent = admin ? 'Admin ✓ Log out' : 'Admin login';
   document.querySelectorAll('#tabs button').forEach(b => {
     b.classList.toggle('active', b.dataset.tab === tab);
     if (b.dataset.tab === 'data') b.hidden = !admin;
   });
-  $('#view').innerHTML = draftBanner() + ({ standings: vStandings, schedule: vSchedule, teams: vTeams, stats: vStats, data: vData })[tab]();
+  $('#view').innerHTML = ({ standings: vStandings, schedule: vSchedule, teams: vTeams, stats: vStats, data: vData })[tab]();
 }
 
 function vStandings() {
@@ -253,8 +255,8 @@ const getToken = () => { try { return localStorage.getItem(TOKEN_KEY) || ""; } c
 function forgetToken() { try { localStorage.removeItem(TOKEN_KEY); } catch {} toast("Token removed from this browser."); }
 const isDirty = () => admin && published && JSON.stringify(state) !== published;
 function draftBanner() {
-  return isDirty() ? `<div class="card" style="border-color:var(--accent)"><div class="row" style="margin:0"><span><b>Unpublished changes.</b> Visitors can\u2019t see them yet.</span>
-    <span><button class="b" onclick="publish()">Publish to site</button> <button class="g" onclick="discardDraft()">Discard</button></span></div></div>` : "";
+  return isDirty() ? `<div class="bar-in"><span><b>Unpublished changes</b> \u2013 visitors can\u2019t see them yet.</span>
+    <span><button class="b" onclick="publish()">Publish to site</button> <button class="g" onclick="discardDraft()">Discard</button></span></div>` : "";
 }
 function discardDraft() { if (confirm("Discard your unpublished changes?")) { try { localStorage.removeItem(KEY); } catch {} location.reload(); } }
 function toast(msg) {

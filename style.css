@@ -51,3 +51,7 @@ input,select,textarea{width:100%;padding:8px;border:1px solid var(--line);border
 .ball{vertical-align:-3px}
 #toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:.2s;max-width:90%;z-index:20}
 #toast.show{opacity:1;transform:translate(-50%,0)}
+#draftbar{position:fixed;left:0;right:0;bottom:0;z-index:15}
+#draftbar .bar-in{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;background:var(--card);border-top:3px solid var(--accent);box-shadow:0 -4px 16px #0003}
+body.has-bar{padding-bottom:84px}
+body.has-bar #toast{bottom:100px}
