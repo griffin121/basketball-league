@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hoops League Tracker</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>🏀 <span id="leagueName">My Basketball League</span></h1>
+  <nav id="tabs">
+    <button data-tab="standings" class="active">Standings</button>
+    <button data-tab="schedule">Schedule &amp; Scores</button>
+    <button data-tab="teams">Teams</button>
+    <button data-tab="stats">Player Stats</button>
+    <button data-tab="data">Data</button>
+  </nav>
+</header>
+<main id="view"></main>
+<dialog id="dlg"><form id="dlgForm" method="dialog"></form></dialog>
+<script src="app.js"></script>
+</body>
+</html>

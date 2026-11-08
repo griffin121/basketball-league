@@ -1,0 +1,117 @@
+{
+  "league": "My Basketball League · 2026-27",
+  "teams": [
+    {
+      "id": "hawks",
+      "name": "Hawks",
+      "color": "#e8590c"
+    },
+    {
+      "id": "wolves",
+      "name": "Wolves",
+      "color": "#1c7ed6"
+    },
+    {
+      "id": "titans",
+      "name": "Titans",
+      "color": "#2f9e44"
+    },
+    {
+      "id": "rockets",
+      "name": "Rockets",
+      "color": "#ae3ec9"
+    }
+  ],
+  "players": [
+    {
+      "id": "p1",
+      "teamId": "hawks",
+      "name": "Sample Player",
+      "number": ""
+    },
+    {
+      "id": "p2",
+      "teamId": "rockets",
+      "name": "Another Player",
+      "number": ""
+    }
+  ],
+  "games": [
+    {
+      "id": "g1",
+      "date": "2026-11-01",
+      "time": "18:00",
+      "homeId": "hawks",
+      "awayId": "wolves",
+      "location": "",
+      "played": true,
+      "homeScore": 54,
+      "awayScore": 49,
+      "stats": {
+        "p1": {
+          "pts": 18,
+          "reb": 7,
+          "ast": 4,
+          "stl": 2,
+          "blk": 1
+        }
+      }
+    },
+    {
+      "id": "g2",
+      "date": "2026-11-01",
+      "time": "19:15",
+      "homeId": "titans",
+      "awayId": "rockets",
+      "location": "",
+      "played": true,
+      "homeScore": 61,
+      "awayScore": 66,
+      "stats": {
+        "p2": {
+          "pts": 22,
+          "reb": 5,
+          "ast": 6,
+          "stl": 1,
+          "blk": 0
+        }
+      }
+    },
+    {
+      "id": "g3",
+      "date": "2026-11-08",
+      "time": "18:00",
+      "homeId": "wolves",
+      "awayId": "titans",
+      "location": "",
+      "played": true,
+      "homeScore": 58,
+      "awayScore": 52,
+      "stats": {}
+    },
+    {
+      "id": "g4",
+      "date": "2026-11-15",
+      "time": "18:00",
+      "homeId": "rockets",
+      "awayId": "hawks",
+      "location": "",
+      "played": false,
+      "homeScore": 0,
+      "awayScore": 0,
+      "stats": {}
+    },
+    {
+      "id": "g5",
+      "date": "2026-11-15",
+      "time": "19:15",
+      "homeId": "wolves",
+      "awayId": "rockets",
+      "location": "",
+      "played": false,
+      "homeScore": 0,
+      "awayScore": 0,
+      "stats": {}
+    }
+  ]
+}
