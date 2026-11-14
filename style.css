@@ -70,3 +70,6 @@ body.has-bar #toast{bottom:100px}
 .abtns{display:flex;flex-wrap:wrap;gap:8px}.abtns button{flex:1 1 90px;padding:14px 10px;font-weight:600}
 button:disabled{opacity:.4;cursor:not-allowed}
 body.has-bar .kactions{bottom:70px}
+
+.jer{margin-left:6px;color:var(--muted);font-size:.85rem;font-weight:600}
+.jer::before{content:'\2013 '}
