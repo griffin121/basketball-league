@@ -44,6 +44,20 @@ function loadDraft() {
 const team = id => state.teams.find(t => t.id === id);
 const player = id => state.players.find(p => p.id === id);
 const tname = id => team(id)?.name ?? '?';
+// Jersey shade for a game side. Doubleheader: a team that played the earlier game that day keeps its shade.
+function lightSide(g, seen = new Set()) {
+  seen.add(g.id);
+  const prev = state.games.filter(x => x !== g && !seen.has(x.id) && x.date === g.date &&
+    (state.games.indexOf(x) < state.games.indexOf(g)) && [x.homeId, x.awayId].some(t => t === g.homeId || t === g.awayId)).pop();
+  if (prev) {
+    const ps = lightSide(prev, seen), pl = ps === 'home' ? prev.homeId : prev.awayId;
+    if (pl === g.homeId) return 'home'; if (pl === g.awayId) return 'away';
+    const pd = ps === 'home' ? prev.awayId : prev.homeId;   // team that wore dark earlier keeps dark
+    if (pd === g.homeId) return 'away'; if (pd === g.awayId) return 'home';
+  }
+  return g.light === 'away' ? 'away' : 'home';
+}
+const jer = (g, side) => `<span class="jer">${lightSide(g) === side ? 'Light' : 'Dark'}</span>`;
 const tdot = id => `<span class="dot" style="background:${esc(team(id)?.color || '#999')}"></span>`;
 
 /* ---------- computed ---------- */
@@ -109,11 +123,11 @@ function boxHtml(g) {
 
 function gameRow(g) {
   const aw = g.played && g.awayScore > g.homeScore, hw = g.played && g.homeScore > g.awayScore;
-  const side = (id, score, win) => `<div class="side ${win ? 'win' : ''}">${tdot(id)}<span class="nm">${esc(tname(id))}</span>${g.played ? `<span class="pts">${score}</span>` : ''}</div>`;
+  const side = (id, score, win, sd) => `<div class="side ${win ? 'win' : ''}">${tdot(id)}<span class="nm">${esc(tname(id))}</span>${jer(g, sd)}${g.played ? `<span class="pts">${score}</span>` : ''}</div>`;
   const meta = [g.played ? 'Final' : fmtTime(g.time), g.location].filter(Boolean).map(esc).join(' · ');
   return `<div class="gm">
-    <div class="gm-main">${g.played ? `<div class="sides">${side(g.awayId, g.awayScore, aw)}${side(g.homeId, g.homeScore, hw)}</div>`
-      : `<div class="sides matchup">${tdot(g.awayId)}<strong>${esc(tname(g.awayId))}</strong><span class="vs">vs</span>${tdot(g.homeId)}<strong>${esc(tname(g.homeId))}</strong></div>`}
+    <div class="gm-main">${g.played ? `<div class="sides">${side(g.awayId, g.awayScore, aw, 'away')}${side(g.homeId, g.homeScore, hw, 'home')}</div>`
+      : `<div class="sides matchup">${tdot(g.awayId)}<strong>${esc(tname(g.awayId))}</strong>${jer(g, 'away')}<span class="vs">vs</span>${tdot(g.homeId)}<strong>${esc(tname(g.homeId))}</strong>${jer(g, 'home')}</div>`}
       <div class="gm-side">${meta ? `<span class="muted">${meta}</span>` : ''}${A(`<button class="g" onclick="editGame('${g.id}')">${g.played ? 'Edit' : 'Enter score'}</button>`)}</div></div>
     ${g.played ? boxHtml(g) : ''}</div>`;
 }
@@ -215,7 +229,8 @@ function editGame(id) {
       ${ps.map(p => `<tr><td>${esc(p.number)} ${esc(p.name)}</td>${STATS.map(([k]) => `<td><input type="number" min="0" name="s_${p.id}_${k}" value="${g.stats?.[p.id]?.[k] ?? ''}"></td>`).join('')}</tr>`).join('') || '<tr><td class="muted">No players</td></tr>'}</table></div>`;
   };
   dialog(`<h2>${id ? 'Edit' : 'New'} game</h2><div class="two"><div><label>Date</label><input type="date" name="date" required value="${esc(g.date)}"></div><div><label>Time</label><input type="time" name="time" value="${esc(g.time)}"></div>
-    <div><label>Away</label><select name="away">${opts(g.awayId)}</select></div><div><label>Home</label><select name="home">${opts(g.homeId)}</select></div></div>
+    <div><label>Away</label><select name="away">${opts(g.awayId)}</select></div><div><label>Home</label><select name="home">${opts(g.homeId)}</select></div>
+    <div><label>Light jerseys</label><select name="light"><option value="home" ${g.light !== 'away' ? 'selected' : ''}>Home (away wears dark)</option><option value="away" ${g.light === 'away' ? 'selected' : ''}>Away (home wears dark)</option></select></div></div>
     <label>Location</label><input name="location" value="${esc(g.location)}">
     <label><input type="checkbox" name="played" style="width:auto" ${g.played ? 'checked' : ''}> Game played (final score)</label>
     <div class="two"><div><label>Away score</label><input type="number" min="0" name="as" value="${g.awayScore}"></div><div><label>Home score</label><input type="number" min="0" name="hs" value="${g.homeScore}"></div></div>
@@ -226,7 +241,7 @@ function editGame(id) {
       const m = k.match(/^s_(.+)_(\w+)$/); if (!m || v === '') continue;
       (stats[m[1]] ??= {})[m[2]] = +v;
     }
-    Object.assign(g, { date: fd.get('date'), time: fd.get('time'), awayId: fd.get('away'), homeId: fd.get('home'), location: fd.get('location'),
+    Object.assign(g, { date: fd.get('date'), time: fd.get('time'), awayId: fd.get('away'), homeId: fd.get('home'), location: fd.get('location'), light: fd.get('light') === 'away' ? 'away' : 'home',
       played: fd.has('played'), awayScore: +fd.get('as') || 0, homeScore: +fd.get('hs') || 0, stats });
     if (!id) state.games.push({ id: uid(), ...g });
     save();
