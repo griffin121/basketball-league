@@ -489,10 +489,115 @@
       "homeId": "t2",
       "awayId": "t1",
       "location": "",
-      "played": false,
-      "homeScore": 0,
-      "awayScore": 0,
-      "stats": {}
+      "played": true,
+      "homeScore": 45,
+      "awayScore": 44,
+      "stats": {
+        "t2p4": {
+          "pts": 11,
+          "reb": 10,
+          "ast": 1,
+          "stl": 0,
+          "blk": 3,
+          "tpm": 3
+        },
+        "t2p3": {
+          "pts": 6,
+          "reb": 2,
+          "ast": 0,
+          "stl": 0,
+          "blk": 0,
+          "tpm": 0
+        },
+        "t2p2": {
+          "pts": 0,
+          "reb": 0,
+          "ast": 0,
+          "stl": 0,
+          "blk": 0,
+          "tpm": 0
+        },
+        "t2p1": {
+          "pts": 13,
+          "reb": 4,
+          "ast": 2,
+          "stl": 0,
+          "blk": 0,
+          "tpm": 1
+        },
+        "t1p1": {
+          "pts": 8,
+          "reb": 8,
+          "ast": 2,
+          "stl": 0,
+          "blk": 0,
+          "tpm": 0
+        },
+        "t1p4": {
+          "pts": 20,
+          "reb": 7,
+          "ast": 0,
+          "stl": 0,
+          "blk": 1,
+          "tpm": 2
+        },
+        "t1p2": {
+          "pts": 0,
+          "reb": 0,
+          "ast": 0,
+          "stl": 0,
+          "blk": 0,
+          "tpm": 0
+        },
+        "t1p5": {
+          "pts": 0,
+          "reb": 0,
+          "ast": 0,
+          "stl": 0,
+          "blk": 0,
+          "tpm": 0
+        },
+        "yilm2egj": {
+          "pts": 4,
+          "reb": 1,
+          "ast": 0,
+          "stl": 0,
+          "blk": 0,
+          "tpm": 0
+        },
+        "ltyvhn86": {
+          "pts": 12,
+          "reb": 12,
+          "ast": 1,
+          "stl": 2,
+          "blk": 0,
+          "tpm": 2
+        },
+        "t2p7": {
+          "pts": 6,
+          "reb": 8,
+          "ast": 0,
+          "stl": 0,
+          "blk": 0,
+          "tpm": 0
+        },
+        "t2p5": {
+          "pts": 9,
+          "reb": 4,
+          "ast": 3,
+          "stl": 1,
+          "blk": 0,
+          "tpm": 1
+        },
+        "bn7ycy2o": {
+          "pts": 0,
+          "reb": 0,
+          "ast": 0,
+          "stl": 0,
+          "blk": 0,
+          "tpm": 0
+        }
+      }
     },
     {
       "id": "g6",
